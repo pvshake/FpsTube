@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"fpstube/internal/rabbitmq"
 	"log/slog"
 	"os"
 	"os/exec"
@@ -12,13 +13,16 @@ import (
 	"sort"
 	"strconv"
 	"time"
+
+	"github.com/streadway/amqp"
 )
 
 type VideoConverter struct {
-	db *sql.DB
+	db             *sql.DB
+	rabbitmqClient *rabbitmq.RabbitClient
 }
 
-func NewVideoConverter(db *sql.DB) *VideoConverter {
+func NewVideoConverter(rabbitmqClient *rabbitmq.RabbitClient, db *sql.DB) *VideoConverter {
 	return &VideoConverter{
 		db: db,
 	}
@@ -30,9 +34,9 @@ type VideoTask struct {
 	Path    string `json:"path"`
 }
 
-func (vc *VideoConverter) Handle(msg []byte) {
+func (vc *VideoConverter) Handle(d amqp.Delivery) {
 	var task VideoTask
-	err := json.Unmarshal(msg, &task)
+	err := json.Unmarshal(d.Body, &task)
 	if err != nil {
 		vc.logError(task, "failed to unmarshal task", err)
 		return
@@ -40,6 +44,7 @@ func (vc *VideoConverter) Handle(msg []byte) {
 
 	if IsProcessed(vc.db, task.VideoID) {
 		slog.Warn("Video already processed", slog.Int("video_id", task.VideoID))
+		d.Ack(false)
 		return
 	}
 
@@ -54,6 +59,7 @@ func (vc *VideoConverter) Handle(msg []byte) {
 		vc.logError(task, "failed to mark video as processed", err)
 		return
 	}
+	d.Ack(false)
 	slog.Info("Video marked as processed", slog.Int("video_id", task.VideoID))
 }
 
