@@ -34,7 +34,7 @@ type VideoTask struct {
 	Path    string `json:"path"`
 }
 
-func (vc *VideoConverter) Handle(d amqp.Delivery) {
+func (vc *VideoConverter) Handle(d amqp.Delivery, conversionExch, confirmationKey, confirmationQueue string) {
 	var task VideoTask
 	err := json.Unmarshal(d.Body, &task)
 	if err != nil {
@@ -61,6 +61,14 @@ func (vc *VideoConverter) Handle(d amqp.Delivery) {
 	}
 	d.Ack(false)
 	slog.Info("Video marked as processed", slog.Int("video_id", task.VideoID))
+
+	// Publicar a mensagem de confirmação
+	confirmationMessage := []byte(fmt.Sprintf(`{"video_id": %d, "path":"%s"}`, task.VideoID, task.Path))
+	err = vc.rabbitmqClient.PublishMessage(conversionExch, confirmationKey, confirmationQueue, confirmationMessage)
+	if err != nil {
+		slog.Error("Failed to publish confirmation message", slog.String("error", err.Error()))
+	}
+	slog.Info("Published confirmation message", slog.Int("video_id", task.VideoID))
 }
 
 func (vc *VideoConverter) processVideo(task *VideoTask) error {
