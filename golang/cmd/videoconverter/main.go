@@ -1,12 +1,18 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"fpstube/internal/converter"
-	"fpstube/internal/rabbitmq"
 	"log/slog"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
+
+	"fpstube/internal/converter"
+	"fpstube/pkg/log"
+	"fpstube/pkg/rabbitmq"
 
 	_ "github.com/lib/pq"
 	"github.com/streadway/amqp"
@@ -46,34 +52,65 @@ func getEnvOrDefault(key, defaultValue string) string {
 }
 
 func main() {
+	isDebug := getEnvOrDefault("DEBUG", "false") == "true"
+	logger := log.NewLogger(isDebug)
+	slog.SetDefault(logger)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT, syscall.SIGTERM)
+
 	db, err := connectPostgres()
 	if err != nil {
-		panic(err)
+		return
 	}
-	rabbitMQURL := getEnvOrDefault("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/")
-	rabbitClient, err := rabbitmq.NewRabbitClient(rabbitMQURL)
+	defer db.Close()
+
+	rabbitMQURL := getEnvOrDefault("RABBITMQ_URL", "amqp://guest:guest@rabbitmq:5672/")
+	rabbitClient, err := rabbitmq.NewRabbitClient(ctx, rabbitMQURL)
 	if err != nil {
-		panic(err)
+		slog.Error("Failed to connect to RabbitMQ", slog.String("error", err.Error()))
+		return
 	}
 	defer rabbitClient.Close()
 
-	convertionExch := getEnvOrDefault("CONVERSION_EXCHANGE", "conversion_exchange")
-	queueName := getEnvOrDefault("CONVERSION_QUEUE", "video_conversion_queue")
+	conversionExch := getEnvOrDefault("CONVERSION_EXCHANGE", "conversion_exchange")
+	queueName := getEnvOrDefault("QUEUE_NAME", "video_conversion_queue")
 	conversionKey := getEnvOrDefault("CONVERSION_KEY", "conversion")
 	confirmationKey := getEnvOrDefault("CONFIRMATION_KEY", "finish-conversion")
-	confirmationQueue := getEnvOrDefault("CONFIRMATION_QUEUE", "video_confirmation_queue")
+	rootPath := getEnvOrDefault("VIDEO_ROOT_PATH", "/media/uploads")
+	confirmationQueue := "video_confirmation_queue" // Nome da fila de confirmação
 
-	vc := converter.NewVideoConverter(rabbitClient, db)
-	// vc.Handle([]byte(`{"video_id": 1, "path": "/media/uploads/1"}`))
+	videoConverter := converter.NewVideoConverter(rabbitClient, db, rootPath)
 
-	msgs, err := rabbitClient.ConsumeMessages(convertionExch, conversionKey, queueName)
+	// Consumir mensagens da fila de conversão
+	msgs, err := rabbitClient.ConsumeMessages(conversionExch, conversionKey, queueName)
 	if err != nil {
 		slog.Error("Failed to consume messages", slog.String("error", err.Error()))
+		return
 	}
 
-	for d := range msgs {
-		go func(delivery amqp.Delivery) {
-			vc.Handle(delivery, convertionExch, confirmationKey, confirmationQueue)
-		}(d)
-	}
+	var wg sync.WaitGroup
+	go func() {
+		for d := range msgs {
+			wg.Add(1)
+			go func(delivery amqp.Delivery) {
+				defer wg.Done()
+				videoConverter.HandleMessage(ctx, delivery, conversionExch, confirmationKey, confirmationQueue)
+
+			}(d)
+		}
+	}()
+
+	slog.Info("Waiting for messages from RabbitMQ")
+	<-signalChan
+	slog.Info("Shutdown signal received, finalizing processing...")
+
+	cancel()
+
+	wg.Wait()
+
+	slog.Info("Processing completed, exiting...")
 }
