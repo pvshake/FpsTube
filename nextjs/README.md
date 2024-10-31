@@ -2,7 +2,7 @@
 
 ## Descrição
 
-Front-End do FpsTube
+Front-End com Next.js do FpsTube
 
 ## Rodar a aplicação
 
