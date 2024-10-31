@@ -12,7 +12,7 @@ Suba os containers:
 docker-compose up -d
 ```
 
-Através do PGAdmin, crie as tabelas do arquivo `db.sql` no banco de dados `converter`.
+Através do PGAdmin, crie as tabelas do arquivo `prepare-db.sql` no banco de dados `converter`.
 
 Acesse o container o rodando o comando:
 
