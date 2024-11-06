@@ -4,11 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "5.1.2"
-psycopg2-binary = "2.9.10"
-pillow = "11.0.0"
+asgiref = "==3.8.1"
+django = "==5.1.2"
+pillow = "==11.0.0"
+psycopg2-binary = "==2.9.10"
+sqlparse = "==0.5.1"
 
 [dev-packages]
 
 [requires]
-python_version = "3.13"
+python_version = "3.12.6"
