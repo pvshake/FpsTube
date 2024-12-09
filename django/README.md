@@ -49,7 +49,7 @@ python manage.py createsuperuser
 Rode o servidor:
 
 ```bash
-python manage.py runserver
+python manage.py runserver 0.0.0.0:8000
 ```
 
 Acesse o admin em [http://localhost:8000/admin]().
@@ -87,6 +87,12 @@ Para rodar o consumer do RabbitMQ, entre no container do Django:
 
 ```bash
 docker-compose exec django bash
+```
+
+Precisamos sempre rodar os comandos dentro do ambiente virtual do Pipenv:
+
+```bash
+pipenv shell
 ```
 
 Rode os consumers:

@@ -6,7 +6,7 @@ Microsserviço em Go (conversor de vídeos)
 
 ## Rodar a aplicação
 
-Suba os containers:
+Levante os containers:
 
 ```bash
 docker-compose up -d
@@ -20,4 +20,4 @@ Acesse o container o rodando o comando:
 docker compose exec go_app_dev bash
 ```
 
-Use os comandos `cmd/splitchunks/main.go` e `cmd/videoconverter/main.go` para rodar a aplicação
+Use os comandos `go run cmd/splitchunks/main.go` e `go run cmd/videoconverter/main.go` para rodar a aplicação.
