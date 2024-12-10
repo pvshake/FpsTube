@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 import os
-import dj_database_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -80,19 +79,10 @@ WSGI_APPLICATION = 'videos.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'db.sqlite3',
-    # }
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': 'mydb',
-    #     'USER': 'postgres',
-    #     'PASSWORD': 'root',
-    #     'HOST': 'db',
-    #     'PORT': '5432',
-    # }
-    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
 }
 
 
@@ -137,9 +127,11 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-MEDIA_URL = os.environ.get('ASSETS_URL') + '/'
+MEDIA_ROOT = os.environ.get('MEDIA_ROOT', os.path.join(BASE_DIR, 'media', 'uploads'))
 
-MEDIA_ROOT = '/media/uploads/'
+MEDIA_URL = os.environ.get('ASSETS_URL', MEDIA_ROOT) + '/'
 
-RABBITMQ_URL = os.environ.get('RABBITMQ_URL')
-ASSETS_URL = os.environ.get('ASSETS_URL')
+RABBITMQ_URL = os.environ.get('RABBITMQ_URL', 'amqp://guest:guest@localhost:5672')
+ASSETS_URL = os.environ.get('ASSETS_URL', MEDIA_ROOT)
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')

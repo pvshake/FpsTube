@@ -3,23 +3,22 @@ include:
   - ../nginx/docker-compose.yaml
 
 services:
-
-  django:
+  engine:
     build: .
-    ports:
-      - 8000:8000
     environment:
+      - VIDEO_ROOT_PATH=/media/uploads
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
-      - ASSETS_URL=http://host.docker.internal:9000/media/uploads
-      - MEDIA_ROOT=/media/uploads/
     volumes:
-      - .:/app
-      - external-storage:/media/uploads
-    extra_hosts:
-      - host.docker.internal:host-gateway
+      - .:/app # Mount the local app directory for live development
+      - external-storage:/media/uploads # Mount external storage volume
+    tty: true
+    stdin_open: true
     depends_on:
       - rabbitmq
+    restart: always
 
+
+  
 volumes:
   external-storage:
     external: true
