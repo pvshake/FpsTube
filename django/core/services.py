@@ -4,6 +4,7 @@ import shutil
 from django.db import IntegrityError, transaction
 from core.models import Video, VideoMedia
 from core.rabbitmq import create_rabbitmq_connection
+from kombu import Exchange
 
 @dataclass
 class VideoService:
@@ -110,6 +111,9 @@ class VideoService:
     
     def __produce_message(self, video_id: int, path: str, routing_key: str):
         with create_rabbitmq_connection() as conn:
+            exchange = Exchange('conversion_exchange', type='direct', auto_delete=True)
+            exchange.declare(channel=conn.channel())
+            
             producer = conn.Producer(serializer='json')
             producer.publish(
                 {

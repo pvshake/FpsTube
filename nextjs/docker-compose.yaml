@@ -2,7 +2,7 @@ services:
   nextjs:
     build: .
     volumes:
-      - .:/home/node/app
+      - .:/app
     environment:
       - DJANGO_API_URL=http://host.docker.internal:8000/api
     ports:

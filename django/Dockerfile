@@ -2,14 +2,18 @@ FROM python:3.12.6-slim
 
 ENV PYTHONDONTWRITEBYTECODE 1 # Prevents Python from writing pyc files to disc
 ENV PYTHONFAULTHANDLER 1 # Makes Python more verbose in case of an error
-ENV PIPENV_VENV_IN_PROJECT 1
 
-RUN pip install pipenv
+RUN mkdir /app
 
-RUN useradd -ms /bin/bash my-user
+WORKDIR /app
 
-USER my-user
+ADD . /app/
 
-WORKDIR /home/my-user/app
+RUN pip install --upgrade pip
 
-CMD tail -f /dev/null
+RUN pip install --upgrade setuptools wheel
+
+RUN pip install -r requirements.txt
+
+RUN chmod +x ./start.sh
+CMD ["./start.sh"]

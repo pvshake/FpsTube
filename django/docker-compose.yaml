@@ -15,31 +15,18 @@ services:
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
       - ASSETS_URL=http://host.docker.internal:9000/media/uploads
     volumes:
-      - .:/home/my-user/app
+      - .:/app
       - external-storage:/media/uploads
     extra_hosts:
       - host.docker.internal:host-gateway
-    
-  change_media_permission:
-    build: .
-    user: root
-    command: chown -R 1000:1000 /media/uploads
-    volumes:
-      - external-storage:/media/uploads
+
     depends_on:
-      - django
+      - postgres
+      - rabbitmq
+
   
   
 
 volumes:
   external-storage:
     external: true
-
-# Windows - WSL
-
-# C:\Windows\System32\drivers\etc\hosts (bloco em notas admin)
-
-#Mac ou Linux
-# /etc/hosts 
-
-# 127.0.0.1 host.docker.internal

@@ -18,7 +18,7 @@ services:
       DEBUG: "true"
       POSTGRES_USER: "postgres"
       POSTGRES_PASSWORD: "root"
-      POSTGRES_DB: "converter"
+      POSTGRES_DB: "postgres"
       POSTGRES_HOST: "postgres"
       POSTGRES_SSL_MODE: "disable"
       RABBITMQ_URL: "amqp://guest:guest@rabbitmq:5672/"

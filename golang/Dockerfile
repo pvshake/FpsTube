@@ -8,15 +8,9 @@ RUN apk add --no-cache git bash ffmpeg
 WORKDIR /app
 
 # Copiando o arquivo go.mod e go.sum para dentro do container
-COPY go.mod go.sum ./
+ADD . /app/
 
-# Baixando as dependências
 RUN go mod download
 
-# Copiando o restante dos arquivos da aplicação para dentro do container
-COPY . .
-
-# Compilar a aplicação Go (pode ser modificado conforme o nome da sua aplicação)
-
-# Definir o ponto de entrada (entrypoint) como bash para que você possa interagir
-CMD [ "bash" ]
+RUN chmod +x ./start.sh
+CMD ["./start.sh"]

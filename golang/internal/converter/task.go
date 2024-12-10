@@ -43,7 +43,7 @@ func NewVideoConverter(rabbitClient *rabbitmq.RabbitClient, db *sql.DB, rootPath
 // HandleMessage processes a video conversion message
 func (vc *VideoConverter) HandleMessage(ctx context.Context, d amqp.Delivery, conversionExch, confirmationKey, confirmationQueue string) {
 	var task VideoTask
-
+	slog.Info("Received message", slog.String("body", string(d.Body)))
 	if err := json.Unmarshal(d.Body, &task); err != nil {
 		vc.logError(task, "Failed to deserialize message", err)
 		d.Ack(false)

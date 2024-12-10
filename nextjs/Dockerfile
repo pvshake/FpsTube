@@ -1,7 +1,13 @@
 FROM node:22.8.0-slim 
 
-USER node
+RUN mkdir /app
 
-WORKDIR /home/node/app
+WORKDIR /app
 
-CMD ["tail", "-f", "/dev/null"]
+ADD . /app/
+
+RUN npm install
+
+RUN chmod +x ./start.sh
+
+CMD ["./start.sh"]
