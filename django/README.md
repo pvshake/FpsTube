@@ -10,7 +10,7 @@ Backend Django (admin dos vídeos)
 
 ## Rodar a aplicação
 
-Suba os containers do PostgreSQL e PGAdmin:
+Suba os containers se não fez na Root:
 
 ```bash
 docker-compose up -d
@@ -22,47 +22,35 @@ Entre no container do Django:
 docker-compose exec django bash
 ```
 
-Instale as dependências:
-
-```bash
-pipenv install
-```
-
-Sempre rodar os comandos dentro do ambiente virtual do Pipenv:
-
-```bash
-pipenv shell
-```
-
 Rode as migrações do Django:
 
 ```bash
-python manage.py migrate
+./manage.py migrate
 ```
 
 Crie um superusuário:
 
 ```bash
-python manage.py createsuperuser
+./manage.py createsuperuser
 ```
 
-Rode o servidor:
+Nesse mesmo terminal, chame o consumer 1 do RabbitMQ e fique monitorando:
 
 ```bash
-python manage.py runserver 0.0.0.0:8000
+./manage.py consumer_register_processed_video_path
+```
+
+Abra um 2º terminal ao lado, chame o consumer 2 do RabbitMQ e fique monitorando:
+
+```bash
+docker-compose exec django bash
+```
+
+```bash
+./manage.py consumer_upload_chunks_to_external_storage
 ```
 
 Acesse o admin em [http://localhost:8000/admin]().
-
-## Dados de testes
-
-A aplicação já possui dados de testes, rode o comando abaixo para carregá-los:
-
-```bash
-python manage.py flush && python manage.py loaddata initial_data.json
-```
-
-O comando `flush` limpa o banco de dados e o `loaddata` carrega os dados de testes.
 
 ## Configurar /etc/hosts
 
@@ -79,25 +67,4 @@ Acrescente no seu /etc/hosts (para Windows o caminho é C:\Windows\system32\driv
 
 Em todos os sistemas operacionais é necessário abrir o programa para editar o _hosts_ como Administrator da máquina ou root.
 
-Obs.: Se estiver usando o Docker Desktop, pode ser que o `host.docker.internal` já esteja configurado, então remova a linha do arquivo hosts e acrescente a recomendada acima.
-
-## Consumer do RabbitMQ
-
-Para rodar o consumer do RabbitMQ, entre no container do Django:
-
-```bash
-docker-compose exec django bash
-```
-
-Precisamos sempre rodar os comandos dentro do ambiente virtual do Pipenv:
-
-```bash
-pipenv shell
-```
-
-Rode os consumers:
-
-```bash
-python manage.py consumer_upload_chunks_to_external_storage
-python manage.py consumer_register_processed_video_path
-```
+Obs.: Se estiver usando o Docker Desktop, pode ser que o `host.docker.internal` já esteja configurado,então remova a linha do arquivo hosts e acrescente a recomendada acima.

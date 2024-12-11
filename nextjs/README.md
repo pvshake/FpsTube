@@ -6,7 +6,7 @@ Front-End com Next.js do FpsTube
 
 ## Rodar a aplicação
 
-Suba o container do Next.js:
+Suba o container do Next.js caso não tenha feito na Root:
 
 ```bash
 docker-compose up -d
